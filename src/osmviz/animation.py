@@ -51,9 +51,11 @@ Keyboard input is accepted to control the speed of the simulation.
 # THE SOFTWARE.
 
 
-from manager import OSMManager, PygameImageManager
+from __future__ import print_function
+from .manager import OSMManager, PygameImageManager
 import pygame
 import time
+from functools import reduce
 
 Inf = float('inf')
 
@@ -83,7 +85,7 @@ class SimViz(object):
     be implemented if this SimViz is passed in as one of the 
     scene_viz's (as opposed to an actor_viz).
     """
-    raise Exception, "UNIMPLEMENTED"
+    raise Exception("UNIMPLEMENTED")
 
   def getTimeInterval(self):
     """
@@ -92,7 +94,7 @@ class SimViz(object):
     visualization object.
     May return ( -Inf,Inf ) to indicate that it is always present.
     """
-    raise Exception, "UNIMPLEMENTED"
+    raise Exception("UNIMPLEMENTED")
 
   def setState(self,simtime,getXY):
     """
@@ -101,7 +103,7 @@ class SimViz(object):
     This should be stored internally, for subsequent calls to
     methods such as drawToSurface or mouseIntersect.
     """
-    raise Exception, "UNIMPLEMENTED"
+    raise Exception("UNIMPLEMENTED")
   
   def drawToSurface(self,surf):
     """
@@ -109,7 +111,7 @@ class SimViz(object):
     Draws this viz on the supplied surface, according to its
     internal state.
     """
-    raise Exception, "UNIMPLEMENTED"
+    raise Exception("UNIMPLEMENTED")
 
   def getDrawingOrder(self):
     """
@@ -138,7 +140,7 @@ class SimViz(object):
     Note that for Simulation purposes, if getLabel() returns
     None then this method does not need to be implemented.
     """
-    raise Exception, "UNIMPLEMENTED"
+    raise Exception("UNIMPLEMENTED")
 
 
 
@@ -271,7 +273,7 @@ class Simulation(object):
     hours = int(self.time/3600)
     minutes = int( (self.time % 3600) / 60 )
     seconds = int( (self.time % 60) )
-    print "%02d:%02d:%02d" % (hours,minutes,seconds)
+    print("%02d:%02d:%02d" % (hours,minutes,seconds))
 
   def getXY(self,lat,lon,bounds,ssize):
     """
@@ -305,7 +307,7 @@ class Simulation(object):
     notec = pygame.Color(200,200,80);
 
     fnt = None
-    if isinstance(font,basestring):
+    if isinstance(font,str):
       try:
         fnt = pygame.font.Font(font,fontsize);
       except:
@@ -383,7 +385,7 @@ class Simulation(object):
           screen.blit(text, (mousex,mousey-10))
           del text
         else:
-          print selected.getLabel()
+          print(selected.getLabel())
         
       pygame.display.flip()
 

@@ -34,8 +34,12 @@ Basic idea:
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from __future__ import print_function
 import math
-import urllib
+try:
+  import urllib.request as urllib
+except ImportError:
+  import urllib
 import hashlib
 import os.path as path
 import os
@@ -57,21 +61,21 @@ class ImageManager(object):
     Given an already-loaded file, paste it into the internal image
     at the specified top-left coordinate.
     """
-    raise Exception, "UNIMPLEMENTED"
+    raise Exception("UNIMPLEMENTED")
 
   def load_image_file(self,imagef):
     """
     To be overridden.
     Loads specified image file into image object and returns it.
     """
-    raise Exception, "UNIMPLEMENTED"
+    raise Exception("UNIMPLEMENTED")
 
   def create_image(self,width,height):
     """
     To be overridden.
     Create and return image with specified dimensions
     """
-    raise Exception, "UNIMPLEMENTED"
+    raise Exception("UNIMPLEMENTED")
 
   ### END OF TO BE OVERRIDDEN ###
 
@@ -81,7 +85,7 @@ class ImageManager(object):
     are those specified by width and height.
     """
     if self.image:
-      raise Exception, "Image already prepared."
+      raise Exception("Image already prepared.")
     self.image = self.create_image(width,height)
 
   def destroy_image(self):
@@ -100,12 +104,12 @@ class ImageManager(object):
     of that image, pastes the image into this object's internal image.
     """
     if not self.image:
-      raise Exception, "Image not prepared"
+      raise Exception("Image not prepared")
 
     try:
       img = self.load_image_file(imagef)
-    except Exception, e:
-      raise Exception, "Could not load image "+str(imagef)+"\n"+str(e)
+    except Exception as e:
+      raise Exception("Could not load image "+str(imagef)+"\n"+str(e))
 
     self.paste_image(img,xy)
     del img
@@ -127,7 +131,7 @@ class PygameImageManager(ImageManager):
   def __init__(self):
     ImageManager.__init__(self)
     try: import pygame
-    except: raise Exception, "Pygame could not be imported!"
+    except: raise Exception("Pygame could not be imported!")
     self.pygame = pygame
 
   def create_image(self,width,height):
@@ -155,7 +159,7 @@ class PILImageManager(ImageManager):
     ImageManager.__init__(self);
     self.mode = mode
     try: import PIL.Image
-    except: raise Exception, "PIL could not be imported!"
+    except: raise Exception("PIL could not be imported!")
     self.PILImage = PIL.Image
 
   def create_image(self,width,height):
@@ -200,13 +204,13 @@ class OSMManager(object):
     if cache: 
       if not os.path.isdir(cache):
         try:
-          os.makedirs(cache, 0766)
+          os.makedirs(cache, 0o766)
           self.cache = cache
-          print "WARNING: Created cache dir",cache
+          print("WARNING: Created cache dir",cache)
         except:
-          print "Could not make cache dir",cache
+          print("Could not make cache dir",cache)
       elif not os.access(cache, os.R_OK | os.W_OK):
-        print "Insufficient privileges on cache dir",cache
+        print("Insufficient privileges on cache dir",cache)
       else:
         self.cache = cache
 
@@ -215,10 +219,10 @@ class OSMManager(object):
                      or os.getenv("TMP")
                      or os.getenv("TEMP")
                      or "/tmp" )
-      print "WARNING: Using %s to cache maptiles." % self.cache
+      print("WARNING: Using %s to cache maptiles." % self.cache)
       if not os.access(self.cache, os.R_OK | os.W_OK):
-        print " ERROR: Insufficient access to %s." % self.cache
-        raise Exception, "Unable to find/create/use maptile cache directory."
+        print(" ERROR: Insufficient access to %s." % self.cache)
+        raise Exception("Unable to find/create/use maptile cache directory.")
       
     if server: 
       self.server = server
@@ -227,13 +231,13 @@ class OSMManager(object):
     
     # Make a hash of the server URL to use in cached tile filenames.
     md5 = hashlib.md5()
-    md5.update(self.server)
+    md5.update(self.server.encode('utf-8'))
     self.cache_prefix =  'osmviz-%s-' % md5.hexdigest()[:5]
 
     if mgr: # Assume it's a valid manager 
       self.manager = mgr
     else:
-      raise Exception, "OSMManager.__init__ requires argument image_manager"
+      raise Exception("OSMManager.__init__ requires argument image_manager")
 
 
   def getTileCoord(self, lon_deg, lat_deg, zoom):
@@ -279,8 +283,8 @@ class OSMManager(object):
       url = self.getTileURL(tile_coord,zoom)
       try:
         urllib.urlretrieve(url, filename=filename);
-      except Exception,e:
-        raise Exception, "Unable to retrieve URL: "+url+"\n"+str(e)
+      except Exception as e:
+        raise Exception("Unable to retrieve URL: "+url+"\n"+str(e))
     return filename
 
   def tileNWLatlon(self,tile_coord,zoom):
@@ -297,7 +301,7 @@ class OSMManager(object):
     return(lat_deg, lon_deg)
 
 
-  def createOSMImage(self, (minlat, maxlat, minlon, maxlon), zoom):
+  def createOSMImage(self, extent, zoom):
     """
     Given bounding latlons (in degrees), and an OSM zoom level,
     creates an image constructed from OSM tiles.
@@ -307,8 +311,9 @@ class OSMManager(object):
     which the tiles cover.
     """
     if not self.manager:
-      raise Exception, "No ImageManager was specified, cannot create image."
+      raise Exception("No ImageManager was specified, cannot create image.")
 
+    (minlat, maxlat, minlon, maxlon) = extent
     topleft = minX, minY = self.getTileCoord(minlon, maxlat, zoom);
     bottomright = maxX, maxY = self.getTileCoord(maxlon, minlat, zoom);
     new_maxlat, new_minlon = self.tileNWLatlon( topleft, zoom )
@@ -317,7 +322,7 @@ class OSMManager(object):
     pix_width = (maxX-minX+1)*256
     pix_height = (maxY-minY+1)*256
     self.manager.prepare_image( pix_width, pix_height )
-    print "Retrieving %d tiles..." % ( (1+maxX-minX)*(1+maxY-minY) ,)
+    print("Retrieving %d tiles..." % ( (1+maxX-minX)*(1+maxY-minY) ,))
 
     for x in range(minX,maxX+1):
       for y in range(minY,maxY+1):
@@ -325,7 +330,7 @@ class OSMManager(object):
         x_off = 256*(x-minX)
         y_off = 256*(y-minY)
         self.manager.paste_image_file( fname, (x_off,y_off) )
-    print "... done."
+    print("... done.")
     return (self.manager.getImage(), 
             (new_minlat, new_maxlat, new_minlon, new_maxlon))
 
